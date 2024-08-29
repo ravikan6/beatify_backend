@@ -1,58 +1,66 @@
-from typing import Union, Optional
-from fastapi import FastAPI, HTTPException
+from typing import Union, Optional, Annotated
+from fastapi import FastAPI, HTTPException, Depends
 from strawberry.fastapi import GraphQLRouter
-from .schema import schema  
-from pydantic import BaseModel
-from contextlib import asynccontextmanager
-from logging import info
-from motor.motor_asyncio import AsyncIOMotorClient
-
+from pydantic import EmailStr
 from mongoengine import connect, disconnect
+
+from .database.types import UserType, LoginType, UserSignUpType
+from .schema import schema , Context
 from .database.models import User as UserModel
-
 from .utils import get_savan_data
+from .auth.handler import JWTBearer, encode_jwt, decode_jwt
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     app.mongodb_client = AsyncIOMotorClient("mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/?retryWrites=true&w=majority&appName=Beatify")
-#     app.database = app.mongodb_client.get_database("beatify")
-#     ping_response = await app.database.command("ping")
-#     if int(ping_response["ok"]) != 1:
-#         raise Exception("Problem connecting to database cluster.")
-#     else:
-#         info("Connected to database cluster.")
-#     yield
-#     app.mongodb_client.close()
+async def get_context() -> Context:
+    return Context()
 
-graphql_app = GraphQLRouter(schema)
+graphql_app = GraphQLRouter(schema, debug=True, context_getter=get_context)
 
 app = FastAPI(title="Beatify API", version="0.1.0")
 connect(host="mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/beatify?retryWrites=true&w=majority&appName=Beatify")
 app.include_router(graphql_app, prefix="/graphql", include_in_schema=False)
 
-class User(BaseModel):
-    first_name: str
-    last_name: str
-    middle_name: Optional[str] = None  # Make middle name optional
-    email_address: str
-    phone_number: str
-
 @app.get("/")
 def root():
     return {"message": "Api is running"}
 
-@app.get("/users/{email_address}")
-async def read_user_me(email_address: str):
-    user = UserModel.objects(email_address=email_address).first()
+@app.post("/login")
+def user_login(data: LoginType):
+    user = UserModel.objects(email_address=data.email).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    print(user.to_mongo())
-    return User(**user.to_mongo())
+    # if user.password != data.password:
+    #     raise HTTPException(status_code=403, detail="Invalid password")
+    return encode_jwt(str(user.id))
 
-@app.post("/users/")
-async def create_user(user: User):
+@app.post("/sign_up")
+def user_sign_up(user: UserSignUpType):
+    user = UserModel(**user.dict()).save()
+    return encode_jwt(str(user.id))
+
+async def get_current_user(token: Annotated[str, Depends(JWTBearer())]):
+    user_id = decode_jwt(token).get("user_id", None)
+    if user_id is None:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    user = UserModel.objects(id=user_id).first()
+    return user
+
+@app.get("/user/me", dependencies=[Depends(JWTBearer())])
+async def read_user_me(current_user: UserModel | None = Depends(get_current_user)):
+    print(current_user.to_mongo().to_dict())
+    return {**current_user.to_mongo().to_dict(), "id": current_user.pk}
+
+@app.get("/users/{email_address}")
+async def read_user_me(email_address: EmailStr):
+    user = UserModel.objects(email_address=email_address).first()
+    print(user.to_mongo())
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return UserType(**user.to_mongo())
+
+@app.post("/users/", dependencies=[Depends(JWTBearer())])
+async def create_user(user: UserType):
     inserted_user = UserModel(**user.dict()).save()
-    return User(**inserted_user.to_mongo())
+    return UserType(**inserted_user.to_mongo())
 
 @app.get("/savan_data")
 async def read_savan_data():
