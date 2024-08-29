@@ -8,6 +8,7 @@ from strawberry.fastapi import BaseContext
 from .auth.handler import decode_jwt
 from functools import cached_property
 from fastapi import HTTPException
+from datetime import datetime
 
 JSON = strawberry.scalar(
     NewType("JSON", object),
@@ -23,8 +24,11 @@ class User:
     last_name: str
     middle_name: str | None
     email_address: str
-    phone_number: str
-
+    phone_number: str | None
+    profile_picture = str | None
+    date_of_birth = datetime | None
+    date_joined = datetime
+    is_active = bool
 
 class Context(BaseContext):
     @cached_property

@@ -19,6 +19,7 @@ class UserType(BaseUserType):
     id: str
     is_active: bool
     date_joined: datetime | str | None
+    profile_picture: str | None
 
 
 class UserSignUpType(BaseUserType):

@@ -1,14 +1,20 @@
 from typing import Union, Optional, Annotated
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, UploadFile
 from strawberry.fastapi import GraphQLRouter
 from pydantic import EmailStr
 from mongoengine import connect, disconnect
+import cloudinary
+import os
+from dotenv import load_dotenv
 
 from .database.types import UserType, LoginType, UserSignUpType
 from .schema import schema , Context
 from .database.models import User as UserModel
 from .utils import get_savan_data, password_hasher, password_checker
 from .auth.handler import JWTBearer, encode_jwt, decode_jwt
+from .uploader import upload_image
+
+load_dotenv()
 
 async def get_context() -> Context:
     return Context()
@@ -17,6 +23,11 @@ graphql_app = GraphQLRouter(schema, context_getter=get_context)
 graphql_dev_app = GraphQLRouter(schema, debug=True, context_getter=get_context, graphql_ide="apollo-sandbox")
 
 app = FastAPI(title="Beatify API", version="0.1.0")
+cloudinary.config(
+    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", default="duqwlbo9s"),
+    api_key=os.getenv("CLOUDINARY_API_KEY", default="852443822948814"),
+    api_secret=os.getenv("CLOUDINARY_API_SECRET", default="Y8BLlObJoLCU_wcTnVm0AmoeJ9U")
+)
 connect(host="mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/beatify?retryWrites=true&w=majority&appName=Beatify")
 app.include_router(graphql_app, prefix="/graphql", include_in_schema=False)
 app.include_router(graphql_dev_app, prefix="/dev/graphql", include_in_schema=False)
@@ -61,12 +72,22 @@ async def read_user_me(email_address: EmailStr):
     print(user.to_mongo())
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return UserType(**user.to_mongo())
+    return UserType(**user.to_mongo().to_dict())
+
+@app.post("/user/{id}/upload", dependencies=[Depends(JWTBearer())])
+async def upload_profile_picture(id: str, file: UploadFile):
+    user = UserModel.objects(id=id).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    url = await upload_image(file)
+    user.profile_picture = url
+    user.save()
+    return UserType(**user.to_mongo().to_dict(), id=str(user.id))
 
 @app.post("/users/", dependencies=[Depends(JWTBearer())])
 async def create_user(user: UserType):
     inserted_user = UserModel(**user.dict()).save()
-    return UserType(**inserted_user.to_mongo())
+    return UserType(**inserted_user.to_mongo().to_dict())
 
 @app.get("/savan_data")
 async def read_savan_data():
