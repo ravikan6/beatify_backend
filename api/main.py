@@ -10,6 +10,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from mongoengine import connect, disconnect
 from .database.models import User as UserModel
 
+from .utils import get_savan_data
+
 # @asynccontextmanager
 # async def lifespan(app: FastAPI):
 #     app.mongodb_client = AsyncIOMotorClient("mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/?retryWrites=true&w=majority&appName=Beatify")
@@ -25,15 +27,7 @@ from .database.models import User as UserModel
 graphql_app = GraphQLRouter(schema)
 
 app = FastAPI(title="Beatify API", version="0.1.0")
-
-@app.on_event("startup")
-async def startup():
-    connect("mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/beatify?retryWrites=true&w=majority&appName=Beatify", alias='myDB')
-
-@app.on_event("shutdown")
-async def shutdown():
-    disconnect(alias='myDB')
-
+connect(host="mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/beatify?retryWrites=true&w=majority&appName=Beatify")
 app.include_router(graphql_app, prefix="/graphql", include_in_schema=False)
 
 class User(BaseModel):
@@ -52,9 +46,14 @@ async def read_user_me(email_address: str):
     user = UserModel.objects(email_address=email_address).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    return user
+    print(user.to_mongo())
+    return User(**user.to_mongo())
 
 @app.post("/users/")
 async def create_user(user: User):
     inserted_user = UserModel(**user.dict()).save()
-    return inserted_user
+    return User(**inserted_user.to_mongo())
+
+@app.get("/savan_data")
+async def read_savan_data():
+    return get_savan_data()
