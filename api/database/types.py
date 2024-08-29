@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, SecretStr
 from typing import Optional, Any, Annotated
 from datetime import datetime
 
@@ -22,4 +22,4 @@ class UserType(BaseUserType):
 
 
 class UserSignUpType(BaseUserType):
-    password: str
+    password: SecretStr

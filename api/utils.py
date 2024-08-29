@@ -1,6 +1,7 @@
 import http.client
 import json
-
+import os
+import bcrypt
 
 def get_savan_data():
     conn = http.client.HTTPSConnection("www.jiosaavn.com")
@@ -22,3 +23,17 @@ def get_savan_data():
     json_data = json.loads(data)
 
     return json_data
+
+
+def password_hasher(password: str) -> str:
+    salt = bcrypt.gensalt()
+    pass_bytes = password.encode('utf-8')
+    _hash = bcrypt.hashpw(pass_bytes, salt) 
+    return _hash
+
+def password_checker(password: str, hashed_password: str) -> bool:
+    try:
+        x = bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
+        return x
+    except:
+        return False

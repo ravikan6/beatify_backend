@@ -18,7 +18,7 @@ JSON = strawberry.scalar(
 
 @strawberry.type
 class User:
-    _id: str | None
+    id: str
     first_name: str
     last_name: str
     middle_name: str | None
@@ -62,7 +62,6 @@ class Query:
 
     @strawberry.field
     def me(self, info: strawberry.Info[Context]) -> User | None:
-        print(info.context)
         return info.context.user
 
 schema = strawberry.Schema(query=Query, config=StrawberryConfig(auto_camel_case=False))
