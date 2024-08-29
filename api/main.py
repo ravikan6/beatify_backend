@@ -24,7 +24,7 @@ from .database.models import User as UserModel
 
 graphql_app = GraphQLRouter(schema)
 
-app = FastAPI(title="Beatify API", version="0.1.0", lifespan=db_lifespan)
+app = FastAPI(title="Beatify API", version="0.1.0")
 
 @app.on_event("startup")
 async def startup():
