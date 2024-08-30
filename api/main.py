@@ -43,7 +43,7 @@ def user_login(data: LoginType):
         raise HTTPException(status_code=404, detail="User not found")
     if not password_checker(data.password, user.password):
         raise HTTPException(status_code=403, detail="Invalid password")
-    return encode_jwt(user.id)
+    return {**encode_jwt(user.id), "user": UserType(**user.to_mongo().to_dict(), id=str(user.id))}
 
 @app.post("/sign_up")
 def user_sign_up(user: UserSignUpType):
@@ -53,7 +53,8 @@ def user_sign_up(user: UserSignUpType):
     user_data = user.dict()
     user_data["password"] = password_hasher(user_data["password"])
     user = UserModel(**user_data).save()
-    return encode_jwt(str(user.id))
+    return {**encode_jwt(user.id), "user": UserType(**user.to_mongo().to_dict(), id=str(user.id))}
+
 
 async def get_current_user(token: Annotated[str, Depends(JWTBearer())]):
     user_id = decode_jwt(token).get("user_id", None)
