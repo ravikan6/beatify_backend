@@ -48,7 +48,7 @@ def encode_jwt(user_id: str) -> str:
     token = jwt.encode(payload, get_secret_key(), algorithm="HS256")
     return {
         "token": token,
-        "expiresAt": payload["expires"]
+        "expiresAt": payload["expiresAt"]
     }
 
 def decode_jwt(token: str) -> dict:
