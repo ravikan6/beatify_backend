@@ -90,3 +90,7 @@ async def upload_profile_picture(id: str, file: UploadFile):
 @app.get("/savan_data")
 async def read_savan_data():
     return get_savan_data()
+
+@app.get("/top-artist")
+async def read_top_artist():
+    return get_savan_data('__call=social.getTopArtists&api_version=4&_format=json&_marker=0&ctx=web6dot0')
