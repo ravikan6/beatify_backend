@@ -23,7 +23,7 @@ class User:
     first_name: str
     last_name: str
     middle_name: str | None
-    email_address: str
+    email: str
     phone_number: str | None
     profile_picture = str | None
     date_of_birth = datetime | None

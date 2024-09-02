@@ -11,9 +11,10 @@ class BaseUserType(BaseModel):
     first_name: str
     last_name: str
     middle_name: Optional[str] = None  # Make middle name optional
-    email_address: str
+    email: str
     phone_number: str | None
     date_of_birth: datetime | str | None
+    gender: str | None
 
 class UserType(BaseUserType):
     id: str
@@ -24,3 +25,4 @@ class UserType(BaseUserType):
 
 class UserSignUpType(BaseUserType):
     password: SecretStr
+    updates: bool | None = False

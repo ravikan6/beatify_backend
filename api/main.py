@@ -38,16 +38,16 @@ def root():
 
 @app.post("/login")
 def user_login(data: LoginType):
-    user = UserModel.objects(email_address=data.email).first()
+    user = UserModel.objects(email=data.email).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     if not password_checker(data.password, user.password):
         raise HTTPException(status_code=403, detail="Invalid password")
     return {**encode_jwt(user.id), "user": UserType(**user.to_mongo().to_dict(), id=str(user.id))}
 
-@app.post("/sign_up")
-def user_sign_up(user: UserSignUpType):
-    _user = UserModel.objects(email_address=user.email_address).first()
+@app.post("/create-account")
+def user_create_account(user: UserSignUpType):
+    _user = UserModel.objects(email=user.email).first()
     if _user is not None:
         raise HTTPException(status_code=409, detail="User already exists")
     user_data = user.dict()
@@ -66,9 +66,9 @@ async def get_current_user(token: Annotated[str, Depends(JWTBearer())]):
 async def read_user_me(current_user: UserModel | None = Depends(get_current_user)):
     return UserType(**current_user.to_mongo().to_dict(), id=str(current_user.id))
 
-@app.get("/users/exists")
+@app.get("/user/exists")
 async def check_user_exists(email: EmailStr):
-    user = UserModel.objects(email_address=email).first()
+    user = UserModel.objects(email=email).first()
     return {"exists": user is not None} 
 
 @app.post("/user", response_model=UserType)
