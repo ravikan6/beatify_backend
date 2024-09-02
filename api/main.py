@@ -55,7 +55,6 @@ def user_sign_up(user: UserSignUpType):
     user = UserModel(**user_data).save()
     return {**encode_jwt(user.id), "user": UserType(**user.to_mongo().to_dict(), id=str(user.id))}
 
-
 async def get_current_user(token: Annotated[str, Depends(JWTBearer())]):
     user_id = decode_jwt(token).get("user_id", None)
     if user_id is None:
@@ -67,13 +66,16 @@ async def get_current_user(token: Annotated[str, Depends(JWTBearer())]):
 async def read_user_me(current_user: UserModel | None = Depends(get_current_user)):
     return UserType(**current_user.to_mongo().to_dict(), id=str(current_user.id))
 
-@app.get("/users/{email_address}")
-async def read_user_me(email_address: EmailStr):
-    user = UserModel.objects(email_address=email_address).first()
-    print(user.to_mongo())
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return UserType(**user.to_mongo().to_dict())
+@app.get("/users/exists")
+async def check_user_exists(email: EmailStr):
+    user = UserModel.objects(email_address=email).first()
+    return {"exists": user is not None} 
+
+@app.post("/user", response_model=UserType)
+async def create_user(user: UserType):
+    inserted_user = UserModel(**user.dict()).save()
+    return UserType(**inserted_user.to_mongo().to_dict())
+
 
 @app.post("/user/{id}/upload", dependencies=[Depends(JWTBearer())])
 async def upload_profile_picture(id: str, file: UploadFile):
@@ -84,11 +86,6 @@ async def upload_profile_picture(id: str, file: UploadFile):
     user.profile_picture = url
     user.save()
     return UserType(**user.to_mongo().to_dict(), id=str(user.id))
-
-@app.post("/users/", dependencies=[Depends(JWTBearer())])
-async def create_user(user: UserType):
-    inserted_user = UserModel(**user.dict()).save()
-    return UserType(**inserted_user.to_mongo().to_dict())
 
 @app.get("/savan_data")
 async def read_savan_data():
