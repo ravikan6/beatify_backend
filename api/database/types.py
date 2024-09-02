@@ -19,8 +19,8 @@ class BaseUserType(BaseModel):
 class UserType(BaseUserType):
     id: str
     is_active: bool
-    date_joined: datetime | str | None
-    profile_picture: str | None
+    date_joined: datetime | str | None = None
+    profile_picture: str | None = None
 
 
 class UserSignUpType(BaseUserType):
