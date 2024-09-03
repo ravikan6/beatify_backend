@@ -76,6 +76,13 @@ async def create_user(user: UserType):
     inserted_user = UserModel(**user.dict()).save()
     return UserType(**inserted_user.to_mongo().to_dict())
 
+@app.post("/forgot-password")
+async def forgot_password(email: EmailStr):
+    user = UserModel.objects(email=email).first()
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "Password reset link sent to your email"}
+
 
 @app.post("/user/{id}/upload", dependencies=[Depends(JWTBearer())])
 async def upload_profile_picture(id: str, file: UploadFile):
@@ -91,6 +98,47 @@ async def upload_profile_picture(id: str, file: UploadFile):
 async def read_savan_data():
     return get_savan_data()
 
-@app.get("/top-artist")
+@app.get("/music-languages")
+async def read_music_languages():
+    list = [
+        {"id": "hi", "name": "Hindi", "image": "https://www.countryflags.io/in/flat/64.png", "color": "#FFD700"},
+        {"id": "en", "name": "English", "image": "https://www.countryflags.io/us/flat/64.png", "color": "#FF4500"},
+        {"id": "es", "name": "Spanish", "image": "https://www.countryflags.io/es/flat/64.png", "color": "#FF6347"},
+        {"id": "fr", "name": "French", "image": "https://www.countryflags.io/fr/flat/64.png", "color": "#4169E1"},
+        {"id": "ar", "name": "Arabic", "image": "https://www.countryflags.io/ae/flat/64.png", "color": "#FF8C00"},
+        {"id": "pt", "name": "Portuguese", "image": "https://www.countryflags.io/pt/flat/64.png", "color": "#FF69B4"},
+        {"id": "de", "name": "German", "image": "https://www.countryflags.io/de/flat/64.png", "color": "#FF1493"},
+    ]
+    return {"results": list}
+
+@app.get("/personalized/top-artists")
 async def read_top_artist():
-    return get_savan_data('__call=social.getTopArtists&api_version=4&_format=json&_marker=0&ctx=web6dot0')
+    data = get_savan_data('__call=social.getTopArtists&api_version=4&_format=json&_marker=0&ctx=android')
+    new = []
+    data = data["top_artists"]
+    for item in data:
+        new.append(
+            {"id": item["name"],
+            "name": item["name"],
+            "image": item["image"],
+            "is_followed": item["is_followed"],
+            "type": "artist"})
+    return {"results": new}
+
+@app.get("/artist/search")
+async def search_artist(q: str, p: Optional[int] = 1, n: Optional[int] = 10, marker: Optional[int] = 0, doFormat: bool = False):
+    data = get_savan_data(f'__call=search.getArtistResults&_format=json&_marker={marker}&api_version=4&ctx=android&n={n}&p={p}&q={q}')
+    if doFormat:
+        new = []
+        results = data["results"]
+        for item in results:
+            if item["ctr"] > 0: continue
+            new.append(
+                {"id": item["name"],
+                "name": item["name"],
+                "image": item["image"],
+                "is_followed": item["is_followed"],
+                "type": "artist"})
+        return {"results": new, "total": data["total"], "start": data["start"]}
+        
+    return {"results": data["results"], "total": data["total"], "start": data["start"]}
