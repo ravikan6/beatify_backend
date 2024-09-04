@@ -102,16 +102,16 @@ async def read_savan_data():
 async def read_music_languages():
     music_languages = [
         {"id": "hin", "name": "Hindi", "color": "FFD700"},
+        {"id": "itr", "name": "International", "color": "000000"},
+        {"id": "pun", "name": "Punjabi", "color": "FF1493"},
+        {"id": "mal", "name": "Malayalam", "color": "FF69B4"},
         {"id": "tam", "name": "Tamil", "color": "FF4500"},
         {"id": "tel", "name": "Telugu", "color": "FF6347"},
         {"id": "ben", "name": "Bengali", "color": "4169E1"},
+        {"id": "guj", "name": "Gujarati", "color": "FF0000"},
         {"id": "kan", "name": "Kannada", "color": "FF8C00"},
-        {"id": "mal", "name": "Malayalam", "color": "FF69B4"},
-        {"id": "pun", "name": "Punjabi", "color": "FF1493"},
         {"id": "mar", "name": "Marathi", "color": "800080"},
         {"id": "ori", "name": "Oriya", "color": "008000"},
-        {"id": "guj", "name": "Gujarati", "color": "FF0000"},
-        {"id": "itr", "name": "International", "color": "000000"},
     ]
     return {"results": music_languages}
 
@@ -122,7 +122,7 @@ async def read_top_artist():
     data = data["top_artists"]
     for item in data:
         new.append(
-            {"id": item["name"],
+            {"id": item["artistid"],
             "name": item["name"],
             "image": item["image"],
             "is_followed": item["is_followed"],
@@ -138,7 +138,7 @@ async def search_artist(q: str, p: Optional[int] = 1, n: Optional[int] = 10, mar
         for item in results:
             if item["entity"] == 0: continue
             new.append(
-                {"id": item["name"],
+                {"id": item["id"],
                 "name": item["name"],
                 "image": item["image"],
                 "is_followed": item["is_followed"],
