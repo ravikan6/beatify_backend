@@ -100,16 +100,20 @@ async def read_savan_data():
 
 @app.get("/music-languages")
 async def read_music_languages():
-    list = [
-        {"id": "hi", "name": "Hindi", "image": "https://www.countryflags.io/in/flat/64.png", "color": "#FFD700"},
-        {"id": "en", "name": "English", "image": "https://www.countryflags.io/us/flat/64.png", "color": "#FF4500"},
-        {"id": "es", "name": "Spanish", "image": "https://www.countryflags.io/es/flat/64.png", "color": "#FF6347"},
-        {"id": "fr", "name": "French", "image": "https://www.countryflags.io/fr/flat/64.png", "color": "#4169E1"},
-        {"id": "ar", "name": "Arabic", "image": "https://www.countryflags.io/ae/flat/64.png", "color": "#FF8C00"},
-        {"id": "pt", "name": "Portuguese", "image": "https://www.countryflags.io/pt/flat/64.png", "color": "#FF69B4"},
-        {"id": "de", "name": "German", "image": "https://www.countryflags.io/de/flat/64.png", "color": "#FF1493"},
+    music_languages = [
+        {"id": "hin", "name": "Hindi", "color": "FFD700"},
+        {"id": "tam", "name": "Tamil", "color": "FF4500"},
+        {"id": "tel", "name": "Telugu", "color": "FF6347"},
+        {"id": "ben", "name": "Bengali", "color": "4169E1"},
+        {"id": "kan", "name": "Kannada", "color": "FF8C00"},
+        {"id": "mal", "name": "Malayalam", "color": "FF69B4"},
+        {"id": "pun", "name": "Punjabi", "color": "FF1493"},
+        {"id": "mar", "name": "Marathi", "color": "800080"},
+        {"id": "ori", "name": "Oriya", "color": "008000"},
+        {"id": "guj", "name": "Gujarati", "color": "FF0000"},
+        {"id": "itr", "name": "International", "color": "000000"},
     ]
-    return {"results": list}
+    return {"results": music_languages}
 
 @app.get("/personalized/top-artists")
 async def read_top_artist():
@@ -132,7 +136,7 @@ async def search_artist(q: str, p: Optional[int] = 1, n: Optional[int] = 10, mar
         new = []
         results = data["results"]
         for item in results:
-            if item["ctr"] > 0: continue
+            if item["entity"] == 0: continue
             new.append(
                 {"id": item["name"],
                 "name": item["name"],
