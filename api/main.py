@@ -150,7 +150,7 @@ async def search_artist(q: str, p: Optional[int] = 1, n: Optional[int] = 10, mar
 from .helpers.formatter import JioSaavn
 
 @app.get("/browse/new-releases")
-def read_new_releases():
-    data = get_savan_data('__call=content.getAlbums&api_version=4&_format=json&_marker=0&n=50&p=1&ctx=android')
-    data = JioSaavn.jiosaavan_albums_formatted(data)
-    return {"results": data, "total": len(data)}
+def read_new_releases(image_quility: Optional[str | int] = None, p: Optional[int] = 1, n: Optional[int] = 10):
+    data = get_savan_data(f'__call=content.getAlbums&api_version=4&_format=json&_marker=0&n={n}&p={p}&ctx=web6dot0')
+    data = JioSaavn.jiosaavan_albums_formatted(data["data"], image_quility)
+    return {"results": data, "total": len(data), "title": "New Releases"}
