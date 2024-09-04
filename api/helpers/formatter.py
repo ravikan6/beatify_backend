@@ -11,16 +11,11 @@ class JioSaavn:
         return id.split("_#")[1]
 
     @staticmethod
-    def image_quility(url: str, imageQuility: str | int = "150x150") -> str:
-        if type(imageQuility) is int:
-            if imageQuility == 1:
-                imageQuility = "50x50"
-            elif imageQuility == 2:
-                imageQuility = "150x150"
-            elif imageQuility == 3:
-                imageQuility = "500x500"
-            else:
-                imageQuility = "150x150"
+    def image_quility(url: str, imageQuility: str = 'low') -> str:
+        if imageQuility == 'low': imageQuility = "50x50"
+        elif imageQuility == 'medium': imageQuility = "150x150"
+        elif imageQuility == 'high': imageQuility = "500x500"
+        else : imageQuility = "150x150"
         if url is None: return None
         if url.find("50x50") != -1: return url.replace("50x50", imageQuility)
         if url.find("150x150") != -1: return url.replace("150x150", imageQuility)
@@ -38,6 +33,11 @@ def jiosaavan_album_formatter(album: dict, imageQuility) -> dict:
     _primary_artists = album.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
     _featured_artists = album.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
     _artists = album.get('more_info', {}).get('artistMap', {}).get('artists', [])
+
+    for artist in _artists:
+        n = [jiosaavan_content_artist_formatter(artist) for artist in _artists]
+        ntoset = list(set(tuple(i.items()) for i in n))
+        _artists = [dict(x) for x in ntoset]
 
     data = {
         "id": JioSaavn.generate_jiosaavan_id(album.get('id', None)),
@@ -59,7 +59,7 @@ def jiosaavan_album_formatter(album: dict, imageQuility) -> dict:
             "artists": {
                 "primary": [jiosaavan_content_artist_formatter(artist) for artist in _primary_artists],
                 "featured": [jiosaavan_content_artist_formatter(artist) for artist in _featured_artists],
-                "all": list(set(jiosaavan_content_artist_formatter(artist) for artist in _artists)),
+                "all": _artists,
             },
         }   
     }
@@ -73,10 +73,10 @@ def stringToInt(value):
     except: return 0
 
 def jiosaavan_content_artist_formatter(artist):
-    return (
-        JioSaavn.generate_jiosaavan_id(artist.get('id', None)),
-        artist.get('name', 'Unknown Artist'),
-        artist.get('role', None),
-        artist.get('type', 'artist'),
-        JioSaavn.image_quility(artist.get('image', None), None),
-    )
+    return {
+        "id": JioSaavn.generate_jiosaavan_id(artist.get('id', None)),
+        "name": artist.get('name', 'Unknown Artist'),
+        "role": artist.get('role', None),
+        "type": artist.get('type', 'artist'),
+        "image": JioSaavn.image_quility(artist.get('image', None), None),
+    }
