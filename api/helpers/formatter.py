@@ -1,6 +1,7 @@
 import random
 import time
 from ..utils import decrypt_saavan_media_link
+import urllib.parse
 
 class JioSaavn:
     @staticmethod
@@ -9,7 +10,11 @@ class JioSaavn:
 
     @staticmethod
     def get_id(id):
-        return id.split("_#")[1]
+        try:
+            id = urllib.parse.unquote(id)
+            return id.split("_#")[1]
+        except:
+            return id
 
     @staticmethod
     def image_size(url: str, imageSize: str = 'low') -> str:
