@@ -1,5 +1,6 @@
 import random
 import time
+from ..utils import decrypt_saavan_media_link
 
 class JioSaavn:
     @staticmethod
@@ -24,47 +25,104 @@ class JioSaavn:
 
     @staticmethod
     def jiosaavan_albums_formatted(albums: list, imageSize: str, include_songs: bool) -> list:
-        return [jiosaavan_album_formatter(album, imageSize, include_songs) for album in albums]
+        return [JioSaavn.jiosaavan_album_formatter(album, imageSize, include_songs) for album in albums]
+
+    @staticmethod
+    def jiosaavan_album_formatter(album: dict, imageSize,include_songs: bool ) -> dict:
+        
+        _primary_artists = album.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
+        _featured_artists = album.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
+        _artists = album.get('more_info', {}).get('artistMap', {}).get('artists', [])
+
+        for artist in _artists:
+            n = [jiosaavan_content_artist_formatter(artist) for artist in _artists]
+            ntoset = list(set(tuple(i.items()) for i in n))
+            _artists = [dict(x) for x in ntoset]
+
+        data = {
+            "id": JioSaavn.generate_jiosaavan_id(album.get('id', None)),
+            "title": album.get('title', 'Unknown Album'),
+            "subtitle": album.get('subtitle', None),
+            "type": album.get('type', 'album'),
+            "album_type": album.get('album_type', None) or album.get('type', 'album'),
+            "image": JioSaavn.image_size(album.get('image', None), imageSize),
+            "language": album.get('language', None),
+            "play_count": stringToInt(album.get('play_count', 0)),
+            "explicit_content": stringToInt(album.get('explicit_content', None)) == 1 or False,
+            "list_count": stringToInt(album.get('list_count', 0)),
+            "list_type": album.get('list_type', None),
+            "list":  [jiosaavan_track_formatter(track, imageSize) for track in album.get('list', [])] if include_songs else [],
+            "year": album.get('year', None),
+            "more": {
+                "songs": stringToInt(album.get('more_info', {}).get('song_count', 0)),
+                "release_date": album.get('more_info', {}).get('release_date', None),
+                "artists": {
+                    "primary": [jiosaavan_content_artist_formatter(artist) for artist in _primary_artists],
+                    "featured": [jiosaavan_content_artist_formatter(artist) for artist in _featured_artists],
+                    "all": _artists,
+                },
+            }   
+        }
+
+        return data
 
 
 
-def jiosaavan_album_formatter(album: dict, imageSize,include_songs: bool ) -> dict:
-    
-    _primary_artists = album.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
-    _featured_artists = album.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
-    _artists = album.get('more_info', {}).get('artistMap', {}).get('artists', [])
+
+def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
+    _primary_artists = track.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
+    _featured_artists = track.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
+    _artists = track.get('more_info', {}).get('artistMap', {}).get('artists', [])
 
     for artist in _artists:
         n = [jiosaavan_content_artist_formatter(artist) for artist in _artists]
         ntoset = list(set(tuple(i.items()) for i in n))
         _artists = [dict(x) for x in ntoset]
 
+    media_url = decrypt_saavan_media_link(track.get('more_info', {}).get('encrypted_media_url', None))
+
     data = {
-        "id": JioSaavn.generate_jiosaavan_id(album.get('id', None)),
-        "title": album.get('title', 'Unknown Album'),
-        "subtitle": album.get('subtitle', None),
-        "type": album.get('type', 'album'),
-        "album_type": album.get('album_type', None) or album.get('type', 'album'),
-        "image": JioSaavn.image_size(album.get('image', None), imageSize),
-        "language": album.get('language', None),
-        "play_count": stringToInt(album.get('play_count', 0)),
-        "explicit_content": stringToInt(album.get('explicit_content', None)) == 1 or False,
-        "list_count": stringToInt(album.get('list_count', 0)),
-        "list_type": album.get('list_type', None),
-        "list":  album.get('list', None) if include_songs is True else [],
-        "year": album.get('year', None),
+        "id": JioSaavn.generate_jiosaavan_id(track.get('id', None)),
+        "title": track.get('title', 'Unknown Song'),
+        "subtitle": track.get('subtitle', None),
+        "type": track.get('type', 'song'),
+        "album": track.get('album', {}),
+        "image": JioSaavn.image_size(track.get('image', None), imageSize),
+        "language": track.get('language', None),
+        "play_count": stringToInt(track.get('play_count', 0)),
+        "explicit_content": stringToInt(track.get('explicit_content', None)) == 1 or False,
+        "duration": stringToInt(track.get('duration', 0)),
+        "can_play": media_url is not None,
+        "media_url": media_url,
         "more": {
-            "songs": stringToInt(album.get('more_info', {}).get('song_count', 0)),
-            "release_date": album.get('more_info', {}).get('release_date', None),
+            "release_date": track.get('more_info', {}).get('release_date', None),
             "artists": {
                 "primary": [jiosaavan_content_artist_formatter(artist) for artist in _primary_artists],
                 "featured": [jiosaavan_content_artist_formatter(artist) for artist in _featured_artists],
                 "all": _artists,
             },
-        }   
+            "music": track.get('more_info', {}).get('music', None),
+            "album_id": track.get('more_info', {}).get('album_id', None),
+            "album": track.get('more_info', {}).get('album', None),
+            "label": track.get('more_info', {}).get('label', None),
+            "origin": track.get('more_info', {}).get('origin', None),
+            "is_dolby_content": track.get('more_info', {}).get('is_dolby_content', None),
+            "rights": track.get('more_info', {}).get('rights', {}),
+            "has_lyrics": track.get('more_info', {}).get('has_lyrics', None),
+            "lyrics_snippet": track.get('more_info', {}).get('lyrics_snippet', None),
+            "starred": track.get('more_info', {}).get('starred', None),
+            "copyright_text": track.get('more_info', {}).get('copyright_text', None),
+            "vcode": track.get('more_info', {}).get('vcode', None),
+            "vlink": track.get('more_info', {}).get('vlink', None),
+            "triller_available": track.get('more_info', {}).get('triller_available', None),
+            "webp": track.get('more_info', {}).get('webp', None),
+            "lyrics_id": track.get('more_info', {}).get('lyrics_id', None)
+        }
     }
 
     return data
+
+
 
 def stringToInt(value):
     if type(value) is int: return value
