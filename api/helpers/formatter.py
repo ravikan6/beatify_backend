@@ -11,24 +11,24 @@ class JioSaavn:
         return id.split("_#")[1]
 
     @staticmethod
-    def image_quility(url: str, imageQuility: str = 'low') -> str:
-        if imageQuility == 'low': imageQuility = "50x50"
-        elif imageQuility == 'medium': imageQuility = "150x150"
-        elif imageQuility == 'high': imageQuility = "500x500"
-        else : imageQuility = "150x150"
+    def image_size(url: str, imageSize: str = 'low') -> str:
+        if imageSize == 'low': imageSize = "50x50"
+        elif imageSize == 'medium': imageSize = "150x150"
+        elif imageSize == 'high': imageSize = "500x500"
+        else : imageSize = "150x150"
         if url is None: return None
-        if url.find("50x50") != -1: return url.replace("50x50", imageQuility)
-        if url.find("150x150") != -1: return url.replace("150x150", imageQuility)
-        if url.find("175x175") != -1: return url.replace("500x500", imageQuility)
+        if url.find("50x50") != -1: return url.replace("50x50", imageSize)
+        if url.find("150x150") != -1: return url.replace("150x150", imageSize)
+        if url.find("175x175") != -1: return url.replace("500x500", imageSize)
         return url
 
     @staticmethod
-    def jiosaavan_albums_formatted(albums: list, imageQuility: str | int = "150x150") -> list:
-        return [jiosaavan_album_formatter(album, imageQuility) for album in albums]
+    def jiosaavan_albums_formatted(albums: list, imageSize: str, include_songs: bool) -> list:
+        return [jiosaavan_album_formatter(album, imageSize, include_songs) for album in albums]
 
 
 
-def jiosaavan_album_formatter(album: dict, imageQuility) -> dict:
+def jiosaavan_album_formatter(album: dict, imageSize,include_songs: bool ) -> dict:
     
     _primary_artists = album.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
     _featured_artists = album.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
@@ -45,13 +45,13 @@ def jiosaavan_album_formatter(album: dict, imageQuility) -> dict:
         "subtitle": album.get('subtitle', None),
         "type": album.get('type', 'album'),
         "album_type": album.get('album_type', None) or album.get('type', 'album'),
-        "image": JioSaavn.image_quility(album.get('image', None), imageQuility),
+        "image": JioSaavn.image_size(album.get('image', None), imageSize),
         "language": album.get('language', None),
         "play_count": stringToInt(album.get('play_count', 0)),
         "explicit_content": stringToInt(album.get('explicit_content', None)) == 1 or False,
         "list_count": stringToInt(album.get('list_count', 0)),
         "list_type": album.get('list_type', None),
-        "list": album.get('list', None),
+        "list":  album.get('list', None) if include_songs is True else [],
         "year": album.get('year', None),
         "more": {
             "songs": stringToInt(album.get('more_info', {}).get('song_count', 0)),
@@ -78,5 +78,5 @@ def jiosaavan_content_artist_formatter(artist):
         "name": artist.get('name', 'Unknown Artist'),
         "role": artist.get('role', None),
         "type": artist.get('type', 'artist'),
-        "image": JioSaavn.image_quility(artist.get('image', None), None),
+        "image": JioSaavn.image_size(artist.get('image', None), None),
     }

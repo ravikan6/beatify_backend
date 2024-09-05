@@ -150,7 +150,14 @@ async def search_artist(q: str, p: Optional[int] = 1, n: Optional[int] = 10, mar
 from .helpers.formatter import JioSaavn
 
 @app.get("/browse/new-releases")
-def read_new_releases(image_quility: Optional[str] = 'medium', p: Optional[int] = 1, n: Optional[int] = 10):
+def read_new_releases(image_size: Optional[str] = 'medium', p: Optional[int] = 1, n: Optional[int] = 10):
     data = get_savan_data(f'__call=content.getAlbums&api_version=4&_format=json&_marker=0&n={n}&p={p}&ctx=web6dot0')
-    data = JioSaavn.jiosaavan_albums_formatted(data["data"], image_quility)
+    data = JioSaavn.jiosaavan_albums_formatted(data["data"], image_size)
     return {"results": data, "total": len(data), "title": "New Releases"}
+
+
+@app.get("/browse/this-year-hits")
+def read_this_year_hits(image_size: Optional[str] = 'medium', include_songs: Optional[bool] = False):
+    data = get_savan_data(f'__call=search.topAlbumsoftheYear&api_version=4&_format=json&_marker=0&album_year=1980&album_lang=hindi')
+    data = JioSaavn.jiosaavan_albums_formatted(data, image_size, include_songs)
+    return {"results": data, "total": len(data), "title": "This Year Hits"}
