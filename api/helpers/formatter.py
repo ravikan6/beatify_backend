@@ -6,13 +6,13 @@ import urllib.parse
 class JioSaavn:
     @staticmethod
     def generate_jiosaavan_id(original_id):
-        return f"BJS_#{original_id}"
+        return f"BJS_@{original_id}"
 
     @staticmethod
     def get_id(id):
         try:
             id = urllib.parse.unquote(id)
-            return id.split("_#")[1]
+            return id.split("_@")[1]
         except:
             return id
 
@@ -98,17 +98,35 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
 
     media_url = decrypt_saavan_media_link(track.get('more_info', {}).get('encrypted_media_url', None))
 
+    more_info = track.get('more_info', {})
+
+    album = {
+        "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(more_info.get('album_url', None))),
+        "title": more_info.get('album', None),
+        "type": 'album',
+        "play_count": 0,
+        'more': {
+            'songs': 0,
+            'release_date': more_info.get('release_date', None),
+            'artists': {
+                'primary': [],
+                'featured': [],
+                'all': [],
+            }
+        }
+    }
+
     data = {
         "id": JioSaavn.generate_jiosaavan_id(track.get('id', None)),
         "title": track.get('title', 'Unknown Song'),
         "subtitle": track.get('subtitle', None),
         "type": track.get('type', 'song'),
-        "album": track.get('album', {}),
+        "album": album,
         "image": JioSaavn.image_size(track.get('image', None), imageSize),
         "language": track.get('language', None),
         "play_count": stringToInt(track.get('play_count', 0)),
         "explicit_content": stringToInt(track.get('explicit_content', None)) == 1 or False,
-        "duration": stringToInt(track.get('duration', 0)),
+        "duration": stringToInt(more_info.get('duration', 0)),
         "can_play": media_url is not None,
         "media_url": media_url,
         "more": {
@@ -119,15 +137,13 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
                 "all": _artists,
             },
             "music": track.get('more_info', {}).get('music', None),
-            "album_id": track.get('more_info', {}).get('album_id', None),
-            "album": track.get('more_info', {}).get('album', None),
             "label": track.get('more_info', {}).get('label', None),
             "origin": track.get('more_info', {}).get('origin', None),
-            "is_dolby_content": track.get('more_info', {}).get('is_dolby_content', None),
-            "rights": track.get('more_info', {}).get('rights', {}),
-            "has_lyrics": track.get('more_info', {}).get('has_lyrics', None),
+            # "is_dolby_content": track.get('more_info', {}).get('is_dolby_content', None),
+            # "rights": track.get('more_info', {}).get('rights', {}),
+            "has_lyrics": track.get('more_info', {}).get('has_lyrics', None) == 'true' or False,
             "lyrics_snippet": track.get('more_info', {}).get('lyrics_snippet', None),
-            "starred": track.get('more_info', {}).get('starred', None),
+            # "starred": track.get('more_info', {}).get('starred', None),
             "copyright_text": track.get('more_info', {}).get('copyright_text', None),
             "vcode": track.get('more_info', {}).get('vcode', None),
             "vlink": track.get('more_info', {}).get('vlink', None),
