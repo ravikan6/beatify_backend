@@ -152,7 +152,7 @@ from .helpers.formatter import JioSaavn
 @app.get("/browse/new-releases")
 def read_new_releases(image_size: Optional[str] = 'medium', p: Optional[int] = 1, n: Optional[int] = 10):
     data = get_savan_data(f'__call=content.getAlbums&api_version=4&_format=json&_marker=0&n={n}&p={p}&ctx=web6dot0')
-    data = JioSaavn.jiosaavan_albums_formatted(data["data"], image_size)
+    data = JioSaavn.jiosaavan_albums_formatted(data["data"], image_size, False)
     return {"results": data, "total": len(data), "title": "New Releases"}
 
 
