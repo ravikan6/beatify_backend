@@ -29,6 +29,12 @@ class JioSaavn:
         return url
 
     @staticmethod
+    def link_to_id_extracter(url: str):
+        url = urllib.parse.unquote(url)
+        url = url.split('/')[-1]
+        return url
+
+    @staticmethod
     def jiosaavan_albums_formatted(albums: list, imageSize: str, include_songs: bool) -> list:
         return [JioSaavn.jiosaavan_album_formatter(album, imageSize, include_songs) for album in albums]
 
@@ -44,8 +50,14 @@ class JioSaavn:
             ntoset = list(set(tuple(i.items()) for i in n))
             _artists = [dict(x) for x in ntoset]
 
+        if album.get('perma_url', None):
+            id = JioSaavn.link_to_id_extracter(album.get('perma_url', None))
+        else:
+            id = album.get('id', None)
+
         data = {
-            "id": JioSaavn.generate_jiosaavan_id(album.get('id', None)),
+            "id": JioSaavn.generate_jiosaavan_id( id ),
+            "key": album.get('id', None),
             "title": album.get('title', 'Unknown Album'),
             "subtitle": album.get('subtitle', None),
             "type": album.get('type', 'album'),

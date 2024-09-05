@@ -159,7 +159,7 @@ import datetime
 
 @app.get("/browse/this-year-hits")
 def read_this_year_hits(image_size: Optional[str] = 'medium', include_songs: Optional[bool] = False, year: str = datetime.datetime.now().year, lang: Optional[str] = 'hindi'):
-    data = get_savan_data(f'__call=search.topAlbumsoftheYear&api_version=4&_format=json&_marker=0&album_year={year}&album_lang={lang}')
+    data = get_savan_data(f'__call=search.topAlbumsoftheYear&api_version=4&_format=json&_marker=0&album_year={year}&album_lang={lang}&ctx=web6dot0')
     data = JioSaavn.jiosaavan_albums_formatted(data, image_size, include_songs)
     return {"results": data, "total": len(data), "title": "This Year Hits"}
 
