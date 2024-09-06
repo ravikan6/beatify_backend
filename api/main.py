@@ -6,6 +6,7 @@ from mongoengine import connect, disconnect
 import cloudinary
 import os
 from dotenv import load_dotenv
+import datetime
 
 from .database.types import UserType, LoginType, UserSignUpType
 from .schema import schema , Context
@@ -155,8 +156,6 @@ def read_new_releases(image_size: Optional[str] = 'medium', p: Optional[int] = 1
     data = JioSaavn.jiosaavan_albums_formatted(data["data"], image_size, False)
     return {"results": data, "total": len(data), "title": "New Releases"}
 
-import datetime
-
 @app.get("/browse/this-year-hits")
 def read_this_year_hits(image_size: Optional[str] = 'medium', include_songs: Optional[bool] = False, year: str = datetime.datetime.now().year, lang: Optional[str] = 'hindi'):
     data = get_savan_data(f'__call=search.topAlbumsoftheYear&api_version=4&_format=json&_marker=0&album_year={year}&album_lang={lang}&ctx=web6dot0')
@@ -164,7 +163,14 @@ def read_this_year_hits(image_size: Optional[str] = 'medium', include_songs: Opt
     return {"results": data, "total": len(data), "title": "This Year Hits"}
 
 @app.get("/album/{id}")
-def read_album(id: str, image_size: Optional[str] = 'medium', include_songs: Optional[bool] = False):
+def read_album(id: str, image_size: Optional[str] = 'medium', include_songs: Optional[bool] = False, include_color: Optional[bool] = False):
     data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=album&includeMetaTags=0&api_version=4&_format=json&_marker=0')
-    data = JioSaavn.jiosaavan_album_formatter(data, image_size, include_songs)
+    data = JioSaavn.jiosaavan_album_formatter(data, image_size, include_songs, include_color)
+    return {"results": data}
+
+from .helpers.formatter import jiosaavan_track_formatter
+@app.get("/track/{id}")
+def read_track(id: str, key: str):
+    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=song&includeMetaTags=0&api_version=4&_format=json&_marker=0')
+    data = jiosaavan_track_formatter(data.get(key, None), 'medium')
     return {"results": data}

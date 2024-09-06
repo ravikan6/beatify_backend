@@ -2,6 +2,8 @@ import random
 import time
 from ..utils import decrypt_saavan_media_link
 import urllib.parse
+import html
+from .colori import ColorExtractor, image_from_url
 
 class JioSaavn:
     @staticmethod
@@ -39,7 +41,7 @@ class JioSaavn:
         return [JioSaavn.jiosaavan_album_formatter(album, imageSize, include_songs) for album in albums]
 
     @staticmethod
-    def jiosaavan_album_formatter(album: dict, imageSize,include_songs: bool ) -> dict:
+    def jiosaavan_album_formatter(album: dict, imageSize,include_songs: bool, include_color: bool = False ) -> dict:
         
         _primary_artists = album.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
         _featured_artists = album.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
@@ -55,13 +57,20 @@ class JioSaavn:
         else:
             id = album.get('id', None)
 
+        if include_color and album.get('image', None):
+            img_array = image_from_url(JioSaavn.image_size(album.get('image', None), 'medium'), image_processing_size=(150, 150))
+            extractor = ColorExtractor(img_array)
+            best_color = extractor.best_color(plot=False)
+            album['color'] = extractor.format_color(best_color)
+
         data = {
             "id": JioSaavn.generate_jiosaavan_id( id ),
             "key": album.get('id', None),
-            "title": album.get('title', 'Unknown Album'),
-            "subtitle": album.get('subtitle', None),
+            "title": html.unescape(album.get('title', 'Unknown Album')),
+            "subtitle": html.unescape(album.get('subtitle', None)),
             "type": album.get('type', 'album'),
-            "album_type": album.get('album_type', None) or album.get('type', 'album'),
+            "color": album.get('color', None),
+            "album_type": 'single' if stringToInt(album.get('list_count', 0)) == 1 else album.get('album_type', None) or album.get('type', 'album'),
             "image": JioSaavn.image_size(album.get('image', None), imageSize),
             "language": album.get('language', None),
             "play_count": stringToInt(album.get('play_count', 0)),
@@ -102,7 +111,7 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
 
     album = {
         "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(more_info.get('album_url', None))),
-        "title": more_info.get('album', None),
+        "title": html.unescape(more_info.get('album', None)),
         "type": 'album',
         "play_count": 0,
         'more': {
@@ -117,9 +126,10 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
     }
 
     data = {
-        "id": JioSaavn.generate_jiosaavan_id(track.get('id', None)),
-        "title": track.get('title', 'Unknown Song'),
-        "subtitle": track.get('subtitle', None),
+        "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(track.get('perma_url', None))),
+        "key": track.get('id', None),
+        "title": html.unescape(track.get('title', 'Unknown Song')),
+        "subtitle": html.unescape(track.get('subtitle', None)),
         "type": track.get('type', 'song'),
         "album": album,
         "image": JioSaavn.image_size(track.get('image', None), imageSize),
