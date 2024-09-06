@@ -1,6 +1,5 @@
 from typing import Union, Optional, Annotated
 from fastapi import FastAPI, HTTPException, Depends, UploadFile
-from strawberry.fastapi import GraphQLRouter
 from pydantic import EmailStr
 from mongoengine import connect, disconnect
 import cloudinary
@@ -9,19 +8,12 @@ from dotenv import load_dotenv
 import datetime
 
 from .database.types import UserType, LoginType, UserSignUpType
-from .schema import schema , Context
 from .database.models import User as UserModel
 from .utils import get_savan_data, password_hasher, password_checker
 from .auth.handler import JWTBearer, encode_jwt, decode_jwt
 from .uploader import upload_image
 
 load_dotenv()
-
-async def get_context() -> Context:
-    return Context()
-
-graphql_app = GraphQLRouter(schema, context_getter=get_context)
-graphql_dev_app = GraphQLRouter(schema, debug=True, context_getter=get_context, graphql_ide="apollo-sandbox")
 
 app = FastAPI(title="Beatify API", version="0.1.0")
 cloudinary.config(
@@ -30,8 +22,6 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET", default="Y8BLlObJoLCU_wcTnVm0AmoeJ9U")
 )
 connect(host="mongodb+srv://raviblog:Ravisaini12beatify@beatify.8c3uw.mongodb.net/beatify?retryWrites=true&w=majority&appName=Beatify")
-app.include_router(graphql_app, prefix="/graphql", include_in_schema=False)
-app.include_router(graphql_dev_app, prefix="/dev/graphql", include_in_schema=False)
 
 @app.get("/")
 def root():
