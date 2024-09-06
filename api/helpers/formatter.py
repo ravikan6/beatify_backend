@@ -3,8 +3,6 @@ import time
 from ..utils import decrypt_saavan_media_link
 import urllib.parse
 import html
-from .colori import ColorExtractor, image_from_url
-
 class JioSaavn:
     @staticmethod
     def generate_jiosaavan_id(original_id):
@@ -57,11 +55,11 @@ class JioSaavn:
         else:
             id = album.get('id', None)
 
-        if include_color and album.get('image', None):
-            img_array = image_from_url(JioSaavn.image_size(album.get('image', None), 'medium'), image_processing_size=(150, 150))
-            extractor = ColorExtractor(img_array)
-            best_color = extractor.best_color(plot=False)
-            album['color'] = extractor.format_color(best_color)
+        # if include_color and album.get('image', None):
+        #     img_array = image_from_url(JioSaavn.image_size(album.get('image', None), 'medium'), image_processing_size=(150, 150))
+        #     extractor = ColorExtractor(img_array)
+        #     best_color = extractor.best_color(plot=False)
+        #     album['color'] = extractor.format_color(best_color)
 
         data = {
             "id": JioSaavn.generate_jiosaavan_id( id ),
