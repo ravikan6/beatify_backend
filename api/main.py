@@ -154,13 +154,25 @@ def read_this_year_hits(image_size: Optional[str] = 'medium', include_songs: Opt
 
 @app.get("/album/{id}")
 def read_album(id: str, image_size: Optional[str] = 'medium', include_songs: Optional[bool] = False, include_color: Optional[bool] = False):
-    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=album&includeMetaTags=0&api_version=4&_format=json&_marker=0')
+    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=album&includeMetaTags=0&api_version=4&_format=json&_marker=0&ctx=web6dot0')
     data = JioSaavn.jiosaavan_album_formatter(data, image_size, include_songs, include_color)
     return {"results": data}
 
 from .helpers.formatter import jiosaavan_track_formatter
 @app.get("/track/{id}")
 def read_track(id: str, key: str):
-    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=song&includeMetaTags=0&api_version=4&_format=json&_marker=0')
+    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=song&includeMetaTags=0&api_version=4&_format=json&_marker=0&ctx=web6dot0')
     data = jiosaavan_track_formatter(data.get(key, None), 'medium')
+    return {"results": data}
+
+@app.get("/browse/trending-playlists")
+def read_trending_playlists(image_size: str = 'medium'):
+    data = get_savan_data(f'__call=content.getFeaturedPlaylists&fetch_from_serialized_files=true&p=1&n=50&api_version=4&_format=json&_marker=0&ctx=web6dot0')
+    data = JioSaavn.jiosaavan_playlist_formatted(data["data"], image_size)
+    return {"results": data}
+
+@app.get("/playlist/{id}")
+def read_playlist(id: str, image_size: str = 'medium', key: str = None):
+    data = get_savan_data(f'?__call=webapi.get&token={id}&type=playlist&includeMetaTags=0&api_version=4&_format=json&_marker=0&ctx=web6dot0')
+    data = JioSaavn.jiosaavan_playlist_formatter(data, image_size, True)
     return {"results": data}

@@ -39,16 +39,15 @@ class JioSaavn:
         return [JioSaavn.jiosaavan_album_formatter(album, imageSize, include_songs) for album in albums]
 
     @staticmethod
+    def jiosaavan_playlist_formatted(lists: list, imageSize: str) -> list:
+        return [JioSaavn.jiosaavan_playlist_formatter(_list, imageSize) for _list in lists]
+
+    @staticmethod
     def jiosaavan_album_formatter(album: dict, imageSize,include_songs: bool, include_color: bool = False ) -> dict:
         
         _primary_artists = album.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
         _featured_artists = album.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
-        _artists = album.get('more_info', {}).get('artistMap', {}).get('artists', [])
-
-        for artist in _artists:
-            n = [jiosaavan_content_artist_formatter(artist) for artist in _artists]
-            ntoset = list(set(tuple(i.items()) for i in n))
-            _artists = [dict(x) for x in ntoset]
+        _artists = duplicate_filter(album.get('more_info', {}).get('artistMap', {}).get('artists', []))
 
         if album.get('perma_url', None):
             id = JioSaavn.link_to_id_extracter(album.get('perma_url', None))
@@ -64,8 +63,8 @@ class JioSaavn:
         data = {
             "id": JioSaavn.generate_jiosaavan_id( id ),
             "key": album.get('id', None),
-            "title": html.unescape(album.get('title', 'Unknown Album')),
-            "subtitle": html.unescape(album.get('subtitle', None)),
+            "title": unescaper(album.get('title', 'Unknown Album')),
+            "subtitle": unescaper(album.get('subtitle', None)),
             "type": album.get('type', 'album'),
             "color": album.get('color', None),
             "album_type": 'single' if stringToInt(album.get('list_count', 0)) == 1 else album.get('album_type', None) or album.get('type', 'album'),
@@ -83,25 +82,63 @@ class JioSaavn:
                 "artists": {
                     "primary": [jiosaavan_content_artist_formatter(artist) for artist in _primary_artists],
                     "featured": [jiosaavan_content_artist_formatter(artist) for artist in _featured_artists],
-                    "all": _artists,
+                    "all": [jiosaavan_content_artist_formatter(artist) for artist in _artists],
                 },
+                "copyright_text": unescaper(album.get('more_info', {}).get('copyright_text', None)),
+            }   
+        }
+
+        return data
+
+    @staticmethod
+    def jiosaavan_playlist_formatter(_list: dict, imageSize, include_songs: bool = False, include_color: bool = False ) -> dict:
+
+        if _list.get('perma_url', None):
+            id = JioSaavn.link_to_id_extracter(_list.get('perma_url', None))
+        else:
+            id = _list.get('id', None)
+
+        _artists = duplicate_filter(_list.get('more_info', {}).get('artists', []))
+
+        data = {
+            "id": JioSaavn.generate_jiosaavan_id( id ),
+            "key": _list.get('id', None),
+            "title": unescaper(_list.get('title', 'Unknown Album')),
+            "subtitle": unescaper(_list.get('subtitle', None)),
+            "type": _list.get('type', 'album'),
+            "color": _list.get('color', None),
+            "image": JioSaavn.image_size(_list.get('image', None), imageSize),
+            "language": _list.get('language', None),
+            "play_count": stringToInt(_list.get('play_count', 0)),
+            "explicit_content": stringToInt(_list.get('explicit_content', None)) == 1 or False,
+            "list_count": stringToInt(_list.get('list_count', 0)),
+            "list_type": _list.get('list_type', None),
+            "list":  [jiosaavan_track_formatter(track, imageSize) for track in _list.get('list', [])] if include_songs else [],
+            "year": _list.get('year', None),
+            "more": {
+                "songs": stringToInt(_list.get('more_info', {}).get('song_count', 0)),
+                "isWeekly": _list.get('more_info', {}).get('isWeekly', 0) == 'true' or False,
+                "followers": stringToInt(_list.get('more_info', {}).get('follower_count', 0)),
+                "fans": _list.get('more_info', {}).get('fan_count', '0'),
+                'artists':  [jiosaavan_content_artist_formatter(artist) for artist in _artists]
             }   
         }
 
         return data
 
 
+def unescaper(_str):
+    if _str is None: return _str
+    try: 
+        return html.unescape(_str)
+    except: 
+        return _str
 
 
 def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
     _primary_artists = track.get('more_info', {}).get('artistMap', {}).get('primary_artists', [])
     _featured_artists = track.get('more_info', {}).get('artistMap', {}).get('featured_artists', [])
-    _artists = track.get('more_info', {}).get('artistMap', {}).get('artists', [])
-
-    for artist in _artists:
-        n = [jiosaavan_content_artist_formatter(artist) for artist in _artists]
-        ntoset = list(set(tuple(i.items()) for i in n))
-        _artists = [dict(x) for x in ntoset]
+    _artists = duplicate_filter(track.get('more_info', {}).get('artistMap', {}).get('artists', []))
 
     media_url = decrypt_saavan_media_link(track.get('more_info', {}).get('encrypted_media_url', None))
 
@@ -109,7 +146,7 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
 
     album = {
         "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(more_info.get('album_url', None))),
-        "title": html.unescape(more_info.get('album', None)),
+        "title": unescaper(more_info.get('album', None)),
         "type": 'album',
         "play_count": 0,
         'more': {
@@ -126,8 +163,8 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
     data = {
         "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(track.get('perma_url', None))),
         "key": track.get('id', None),
-        "title": html.unescape(track.get('title', 'Unknown Song')),
-        "subtitle": html.unescape(track.get('subtitle', None)),
+        "title": unescaper(track.get('title', 'Unknown Song')),
+        "subtitle": unescaper(track.get('subtitle', None)),
         "type": track.get('type', 'song'),
         "album": album,
         "image": JioSaavn.image_size(track.get('image', None), imageSize),
@@ -142,7 +179,7 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
             "artists": {
                 "primary": [jiosaavan_content_artist_formatter(artist) for artist in _primary_artists],
                 "featured": [jiosaavan_content_artist_formatter(artist) for artist in _featured_artists],
-                "all": _artists,
+                "all": [jiosaavan_content_artist_formatter(artist) for artist in _artists],
             },
             "music": track.get('more_info', {}).get('music', None),
             "label": track.get('more_info', {}).get('label', None),
@@ -163,6 +200,18 @@ def jiosaavan_track_formatter(track: dict, imageSize: str) -> dict:
 
     return data
 
+def duplicate_filter(data: list):
+    seen = set()
+    filtered_data = []
+
+    for item in data:
+        identifier = item.get('key')
+        
+        if identifier not in seen:
+            seen.add(identifier)
+            filtered_data.append(item)
+
+    return filtered_data
 
 
 def stringToInt(value):
@@ -173,7 +222,8 @@ def stringToInt(value):
 
 def jiosaavan_content_artist_formatter(artist):
     return {
-        "id": JioSaavn.generate_jiosaavan_id(artist.get('id', None)),
+        "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(artist.get('perma_url', None))),
+        "key": artist.get('id', None),
         "name": artist.get('name', 'Unknown Artist'),
         "role": artist.get('role', None),
         "type": artist.get('type', 'artist'),
