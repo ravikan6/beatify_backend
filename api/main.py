@@ -169,11 +169,11 @@ def read_track(id: str, key: str):
 def read_trending_playlists(image_size: str = 'medium'):
     data = get_savan_data(f'__call=content.getFeaturedPlaylists&fetch_from_serialized_files=true&p=1&n=50&api_version=4&_format=json&_marker=0&ctx=web6dot0')
     data = JioSaavn.jiosaavan_playlist_formatted(data["data"], image_size)
-    return {"results": data}
+    return {"results": data, "total": len(data), "title": "Trending Playlists"}
 
 @app.get("/playlist/{id}")
 def read_playlist(id: str, image_size: str = 'medium', key: str = None):
     data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=playlist&includeMetaTags=0&api_version=4&_format=json&_marker=0&ctx=web6dot0')
     print(data)
     data = JioSaavn.jiosaavan_playlist_formatter(data, image_size, True)
-    return {"results": data, "total": len(data), "title": "Trending Playlists"}
+    return {"results": data}

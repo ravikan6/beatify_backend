@@ -127,7 +127,7 @@ class JioSaavn:
                 "description": unescaper(_list.get('header_desc', None)),
                 "last_updated": stringToInt(more_info.get('last_updated', None)),
                 "user_id": None,
-                "username": (more_info.get('firstname', None) + ' ' + more_info.get('lastname', None)),
+                "username": (more_info.get('firstname', '') + ' ' + more_info.get('lastname', '')),
                 "user_image": None,
                 "meta_string": ', '.join(more_info.get('subtitle_desc', [])),
             }   
