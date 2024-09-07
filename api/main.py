@@ -162,7 +162,7 @@ from .helpers.formatter import jiosaavan_track_formatter
 @app.get("/track/{id}")
 def read_track(id: str, key: str):
     data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=song&includeMetaTags=0&api_version=4&_format=json&_marker=0&ctx=web6dot0')
-    data = jiosaavan_track_formatter(data.get(key, None), 'medium')
+    data = jiosaavan_track_formatter(data.get('songs', {})[0], 'medium')
     return {"results": data}
 
 @app.get("/browse/trending-playlists")

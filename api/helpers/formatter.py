@@ -100,12 +100,15 @@ class JioSaavn:
 
         _artists = duplicate_filter(_list.get('more_info', {}).get('artists', []))
 
+        more_info = _list.get('more_info', {})
+
         data = {
             "id": JioSaavn.generate_jiosaavan_id( id ),
             "key": _list.get('id', None),
             "title": unescaper(_list.get('title', 'Unknown Album')),
             "subtitle": unescaper(_list.get('subtitle', None)),
-            "type": _list.get('type', 'album'),
+            "type": _list.get('type', 'playlist'),
+            "playlist_type": more_info.get('playlist_type', 'playlist'),
             "color": _list.get('color', None),
             "image": JioSaavn.image_size(_list.get('image', None), imageSize),
             "language": _list.get('language', None),
@@ -116,11 +119,17 @@ class JioSaavn:
             "list":  [jiosaavan_track_formatter(track, imageSize) for track in _list.get('list', [])] if include_songs else [],
             "year": _list.get('year', None),
             "more": {
-                "songs": stringToInt(_list.get('more_info', {}).get('song_count', 0)),
-                "isWeekly": _list.get('more_info', {}).get('isWeekly', 0) == 'true' or False,
-                "followers": stringToInt(_list.get('more_info', {}).get('follower_count', 0)),
-                "fans": _list.get('more_info', {}).get('fan_count', '0'),
-                'artists':  [jiosaavan_content_artist_formatter(artist) for artist in _artists]
+                "songs": stringToInt(more_info.get('song_count', 0)),
+                "isWeekly": more_info.get('isWeekly', 0) == 'true' or False,
+                "followers": stringToInt(more_info.get('follower_count', 0)),
+                "fans": more_info.get('fan_count', '0'),
+                'artists':  [jiosaavan_content_artist_formatter(artist) for artist in _artists],
+                "description": unescaper(_list.get('header_desc', None)),
+                "last_updated": stringToInt(more_info.get('last_updated', None)),
+                "user_id": None,
+                "username": (more_info.get('firstname', None) + ' ' + more_info.get('lastname', None)),
+                "user_image": None,
+                "meta_string": ', '.join(more_info.get('subtitle_desc', [])),
             }   
         }
 
