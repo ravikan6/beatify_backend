@@ -210,7 +210,7 @@ def read_playlist_more(id: str, key: str, ):
     return {
         "res": [
             {
-              "title": "Related Playlist",
+              "title": "Playlists for you",
               "data": fdata or [],
               "type": 'playlist'
             }

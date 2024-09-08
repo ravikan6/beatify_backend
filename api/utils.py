@@ -28,7 +28,7 @@ def get_savan_data(params: str = "_format=json&_marker=0&api_version=4&ctx=web6d
     return json_data
 
 
-def decrypt_saavan_media_link(encrypted_media_url: str, quality: str = '96kbps') -> str | None:
+def decrypt_saavan_media_link(encrypted_media_url: str, quality: str = '320kbps') -> str | None:
     if not encrypted_media_url:
         return None
 
