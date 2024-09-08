@@ -235,7 +235,7 @@ def jiosaavan_content_artist_formatter(artist):
     return {
         "id": JioSaavn.generate_jiosaavan_id(JioSaavn.link_to_id_extracter(artist.get('perma_url', None))),
         "key": artist.get('id', None),
-        "name": artist.get('name', 'Unknown Artist'),
+        "name": unescaper(artist.get('name', 'Unknown Artist')),
         "role": artist.get('role', None),
         "type": artist.get('type', 'artist'),
         "image": JioSaavn.image_size(artist.get('image', None), None),

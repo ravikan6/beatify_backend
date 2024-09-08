@@ -189,12 +189,12 @@ def read_album_more(id: str, key: str, year: str|int = None):
     return {
         "res": [
             {
-              "title": "You Might also Like",
+              "title": "You May Also Like",
               "data": fdata or [],
               "type": 'album'
             },
             {
-              "title": "Albums released this year",
+              "title": "Top Albums of the Year",
               "data": sdata or [],
               "type": 'album'
             },
@@ -212,7 +212,7 @@ def read_playlist_more(id: str, key: str, ):
             {
               "title": "Related Playlist",
               "data": fdata or [],
-              "type": 'album'
+              "type": 'playlist'
             }
         ],
         "success": True 
