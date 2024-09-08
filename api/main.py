@@ -173,7 +173,47 @@ def read_trending_playlists(image_size: str = 'medium'):
 
 @app.get("/playlist/{id}")
 def read_playlist(id: str, image_size: str = 'medium', key: str = None):
-    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=playlist&includeMetaTags=0&api_version=4&_format=json&_marker=0&ctx=web6dot0')
+    data = get_savan_data(f'__call=webapi.get&token={JioSaavn.get_id(id)}&type=playlist&includeMetaTags=0&api_version=4&_format=json&_marker=0&n=500&ctx=web6dot0')
     print(data)
     data = JioSaavn.jiosaavan_playlist_formatter(data, image_size, True)
     return {"results": data}
+
+@app.get("/album/{id}/more")
+def read_album_more(id: str, key: str, year: str|int = None):
+    fdata = get_savan_data(f'__call=reco.getAlbumReco&api_version=4&_format=json&_marker=0&ctx=web6dot0&albumid={key}')
+    fdata = JioSaavn.jiosaavan_albums_formatted(fdata, 'medium', False)
+
+    sdata = get_savan_data(f'__call=search.topAlbumsoftheYear&api_version=4&_format=json&_marker=0&ctx=web6dot0&album_year={year or 2024}&album_lang=hindi')
+    sdata = JioSaavn.jiosaavan_albums_formatted(sdata, 'medium', False)
+
+    return {
+        "res": [
+            {
+              "title": "You Might also Like",
+              "data": fdata or [],
+              "type": 'album'
+            },
+            {
+              "title": "Albums released this year",
+              "data": sdata or [],
+              "type": 'album'
+            },
+        ],
+        "success": True 
+    }
+
+
+@app.get("/playlist/{id}/more")
+def read_playlist_more(id: str, key: str, ):
+    fdata = get_savan_data(f'__call=reco.getPlaylistReco&api_version=4&_format=json&_marker=0&ctx=web6dot0&listid={key}')
+    fdata = JioSaavn.jiosaavan_playlist_formatted(fdata, 'medium')
+    return {
+        "res": [
+            {
+              "title": "Related Playlist",
+              "data": fdata or [],
+              "type": 'album'
+            }
+        ],
+        "success": True 
+    }

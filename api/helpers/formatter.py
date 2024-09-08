@@ -85,6 +85,7 @@ class JioSaavn:
                     "all": [jiosaavan_content_artist_formatter(artist) for artist in _artists],
                 },
                 "copyright_text": unescaper(album.get('more_info', {}).get('copyright_text', None)),
+                "is_mini": album.get('more_info', {}).get('mini_obj', False) == 'true' or False  if  album.get('mini_obj', None) == None else album.get('mini_obj', False) == 'true' or False,
             }   
         }
 
@@ -130,6 +131,7 @@ class JioSaavn:
                 "username": (more_info.get('firstname', '') + ' ' + more_info.get('lastname', '')),
                 "user_image": None,
                 "meta_string": ', '.join(more_info.get('subtitle_desc', [])),
+                "is_mini": _list.get('mini_obj', False)
             }   
         }
 
